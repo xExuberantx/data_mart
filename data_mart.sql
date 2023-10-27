@@ -267,3 +267,15 @@ SELECT
 FROM w_18
 JOIN w_19 USING(week_number)
 JOIN w_20 USING(week_number)
+
+
+
+-- 4. Impact analysis
+SELECT
+    week_number
+    ,region
+    ,SUM(sales) sales_per_week
+FROM data_mart.clean_weekly_sales
+WHERE calendar_year = 2020
+GROUP BY 1, 2
+ORDER BY 2, 1
