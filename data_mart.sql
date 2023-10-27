@@ -26,6 +26,8 @@ SELECT
 FROM data_mart.weekly_sales
 
 
+-- 2. Data Exploration
+
 -- 1. What day of the week is used for each week_date value?
 SELECT
     DISTINCT DATE_PART('isodow',week_date)
@@ -125,6 +127,143 @@ SELECT
 FROM data_mart.clean_weekly_sales
 WHERE platform = 'Retail'
 GROUP BY 1,2
-ORDER BY 3
+ORDER BY 3 DESC;
+
+SELECT
+    age_band
+    ,SUM(sales)
+FROM data_mart.clean_weekly_sales
+WHERE platform = 'Retail'
+GROUP BY 1
+ORDER BY 2 DESC;
+
+SELECT
+    demographic
+    ,SUM(sales)
+FROM data_mart.clean_weekly_sales
+WHERE platform = 'Retail'
+GROUP BY 1
+ORDER BY 2 DESC;
 
 -- 9. Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? If not - how would you calculate it instead?
+SELECT
+    calendar_year
+    ,platform
+    ,SUM(transactions) sum_trans
+    ,SUM(sales) sum_sales
+    ,SUM(sales)*1.0/SUM(transactions) as avg_trans
+    ,AVG(avg_transaction) avg_trans2
+FROM data_mart.clean_weekly_sales
+GROUP BY 1,2
+ORDER BY 1,2
+
+-- 3. Before and after analysis
+
+-- 1. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales?
+WITH cte as (
+    SELECT
+        week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE week_number BETWEEN 21 AND 28
+      AND calendar_year = 2020
+    GROUP BY 1
+    ORDER BY 1
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
+FROM cte2
+
+
+-- 2. What about the entire 12 weeks before and after?
+WITH cte as (
+    SELECT
+        week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2020
+    GROUP BY 1
+    ORDER BY 1
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
+FROM cte2
+
+-- 3. How do the sale metrics for these 2 periods before and after compare with the previous years in 2018 and 2019?
+
+WITH cte as (
+    SELECT
+        calendar_year
+        ,week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2018
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY calendar_year, week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY calendar_year, week_number), 2) wow_growth_perc
+FROM cte2
+ORDER BY 1, 2
+
+-- Year over year sales
+
+WITH w_18 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_18
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2018
+    GROUP BY week_number
+),
+w_19 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_19
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2019
+    GROUP BY week_number
+),
+w_20 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_20
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2020
+    GROUP BY week_number
+)
+
+SELECT
+    week_number
+    ,s_18
+    ,ROUND((s_19-s_18)*100.0/s_18,2) as growth1
+    ,s_19
+    ,ROUND((s_20-s_19)*100.0/s_19,2) as growth2
+    ,s_20
+FROM w_18
+JOIN w_19 USING(week_number)
+JOIN w_20 USING(week_number)
