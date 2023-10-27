@@ -26,6 +26,8 @@ SELECT
 FROM data_mart.weekly_sales
 
 
+
+
 -- 2. Data Exploration
 
 -- 1. What day of the week is used for each week_date value?
@@ -119,6 +121,8 @@ FROM cte
 
 
 
+
+
 -- 8. Which age_band and demographic values contribute the most to Retail sales?
 SELECT
     age_band
@@ -181,6 +185,8 @@ SELECT
     *
     ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
 FROM cte2
+
+
 
 
 -- 2. What about the entire 12 weeks before and after?
