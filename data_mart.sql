@@ -279,3 +279,5 @@ FROM data_mart.clean_weekly_sales
 WHERE calendar_year = 2020
 GROUP BY 1, 2
 ORDER BY 2, 1
+
+---
