@@ -122,7 +122,6 @@ FROM cte
 
 
 
-
 -- 8. Which age_band and demographic values contribute the most to Retail sales?
 SELECT
     age_band
