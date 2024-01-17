@@ -22,10 +22,12 @@ SELECT
     ,customer_type
     ,transactions
     ,sales
-    ,sales/transactions as avg_transaction
+    ,ROUND(sales/transactions, 2) as avg_transaction
 FROM data_mart.weekly_sales
 
 
+
+SELECT * FROM data_mart.clean_weekly_sales LIMIT 5
 
 -- 2. Data Exploration
 
