@@ -186,7 +186,6 @@ SELECT
 FROM cte2
 
 
-
 -- 2. What about the entire 12 weeks before and after?
 WITH cte as (
     SELECT
@@ -271,7 +270,6 @@ SELECT
 FROM w_18
 JOIN w_19 USING(week_number)
 JOIN w_20 USING(week_number)
-
 
 
 -- 4. Impact analysis
