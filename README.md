@@ -215,3 +215,127 @@ GROUP BY 1,2
 ORDER BY 1,2
 ```
 ![image](screens/9.PNG)
+
+# 3. Before and after analysis
+
+## 1. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales?
+
+```
+WITH cte as (
+    SELECT
+        week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE week_number BETWEEN 21 AND 28
+      AND calendar_year = 2020
+    GROUP BY 1
+    ORDER BY 1
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
+FROM cte2
+```
+![image](screens/3_1.PNG)
+
+## 2. What about the entire 12 weeks before and after?
+
+```
+WITH cte as (
+    SELECT
+        week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2020
+    GROUP BY 1
+    ORDER BY 1
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
+FROM cte2
+```
+![image](screens/3_2.PNG)
+
+## 3. How do the sale metrics for these 2 periods before and after compare with the previous years in 2018 and 2019?
+
+```
+WITH cte as (
+    SELECT
+        calendar_year
+        ,week_number
+        ,SUM(sales) sales_per_week
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2018
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+    ),
+    cte2 as  (
+    SELECT
+        *
+        ,sales_per_week - LAG(sales_per_week) OVER (ORDER BY calendar_year, week_number) wow_growth
+    FROM cte
+    )
+
+SELECT
+    *
+    ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY calendar_year, week_number), 2) wow_growth_perc
+FROM cte2
+ORDER BY 1, 2
+```
+![image](screens/3_3.PNG)
+
+## Year over year sales
+
+```
+WITH w_18 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_18
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2018
+    GROUP BY week_number
+),
+w_19 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_19
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2019
+    GROUP BY week_number
+),
+w_20 as (
+    SELECT
+        week_number
+        ,SUM(sales) as s_20
+    FROM data_mart.clean_weekly_sales
+    WHERE calendar_year = 2020
+    GROUP BY week_number
+)
+
+SELECT
+    week_number
+    ,s_18
+    ,ROUND((s_19-s_18)*100.0/s_18,2) as growth1
+    ,s_19
+    ,ROUND((s_20-s_19)*100.0/s_19,2) as growth2
+    ,s_20
+FROM w_18
+JOIN w_19 USING(week_number)
+JOIN w_20 USING(week_number)
+```
+![image](screens/3_yoy.PNG)
