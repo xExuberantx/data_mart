@@ -1,4 +1,4 @@
--- 1. Data Cleaning
+-- 1. Data Cleansing
 CREATE TABLE IF NOT EXISTS data_mart.clean_weekly_sales as 
 SELECT
     week_date::DATE
@@ -120,6 +120,7 @@ FROM cte
 
 
 
+
 -- 8. Which age_band and demographic values contribute the most to Retail sales?
 SELECT
     age_band
@@ -182,6 +183,7 @@ SELECT
     *
     ,ROUND(wow_growth*100.0/LAG(sales_per_week) OVER (ORDER BY week_number), 2) wow_growth_perc
 FROM cte2
+
 
 
 -- 2. What about the entire 12 weeks before and after?
@@ -268,6 +270,7 @@ SELECT
 FROM w_18
 JOIN w_19 USING(week_number)
 JOIN w_20 USING(week_number)
+
 
 
 -- 4. Impact analysis
